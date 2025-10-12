@@ -25,14 +25,23 @@ class MainWindow(QtWidgets.QWidget):
         main_layout1.addWidget(self.burger_btn)
         main_layout1.addStretch(1)
 
-        group_box = QtWidgets.QGroupBox("Таблицы данных")
-        table_layout = QtWidgets.QVBoxLayout()
-        table_layout.addWidget(self.table_menu)
-        table_layout.addWidget(self.table_menu1)
-        table_layout.addStretch(1)
-        group_box.setLayout(table_layout)
+        group_box1 = QtWidgets.QGroupBox("Узловые силы")
+        table_layout1 = QtWidgets.QVBoxLayout()
+        table_layout1.addWidget(self.table_menu)
+        group_box1.setLayout(table_layout1)
+
+        group_box2 = QtWidgets.QGroupBox("Распределенные нагрузки")
+        table_layout2 = QtWidgets.QVBoxLayout()
+        table_layout2.addWidget(self.table_menu1)
+        group_box2.setLayout(table_layout2)
+
+        tables_container = QtWidgets.QVBoxLayout()
+        tables_container.addWidget(group_box1)
+        tables_container.addWidget(group_box2)
+        tables_container.addStretch(1)
+
         main_layout.addLayout(main_layout1)
-        main_layout.addWidget(group_box)
+        main_layout.addLayout(tables_container)
         self.setLayout(main_layout)
 
     #высвечивание меню
