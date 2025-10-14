@@ -1,7 +1,8 @@
 from PyQt5 import QtWidgets
 from tables import MainTables
-from PyQt5.QtWidgets import QWidget
+from PyQt5.QtWidgets import QWidget, QFileDialog, QMessageBox
 from graph import Graphics
+import json
 
 class MainWindow(QtWidgets.QWidget):
     def __init__(self):
@@ -15,7 +16,7 @@ class MainWindow(QtWidgets.QWidget):
         self.burger_btn.setFixedSize(40, 40)
         self.burger_btn.clicked.connect(self.show_menu)
         self.graphics_tabels = Graphics() # noqa
-        self.table_menu = MainTables("Стержни")  # noqa первая таблица
+        self.table_menu = MainTables("Стержни")# noqa первая таблица
         self.table_menu1 = MainTables("Распределенные нагрузки") # noqa вторая таблица
         self.table_menu2 = MainTables("Сосредтотченные нагрузки") # noqa третья таблица
 
@@ -71,6 +72,7 @@ class MainWindow(QtWidgets.QWidget):
         action3 = submenu.addAction("Сосредтотченные нагрузки")
         menu.addMenu(submenu)
 
+        open_action = menu.addAction("Открыть файл")
         save_action = menu.addAction("Сохранить файл")
         action = menu.exec_(self.burger_btn.mapToGlobal(self.burger_btn.rect().bottomLeft()))
         if action == action1:
@@ -80,7 +82,25 @@ class MainWindow(QtWidgets.QWidget):
         elif action == action3:
             tables_work(self.group_box3)
         elif action == save_action:
-            self.save_file()
+            self.save_all_tables()
+
+    def save_all_tables(self):
+        options = QFileDialog.Options()
+        file_name, _ = QFileDialog.getSaveFileName(
+            self, "Сохранить все таблицы", "", "JSON Files (*.json)", options=options
+        )
+        if not file_name:
+            return
+        all_tables_json = dict()
+        data = list()
+        data.append(self.table_menu.tables_json())
+        data.append(self.table_menu1.tables_json())
+        data.append(self.table_menu2.tables_json())
+        all_tables_json["Objects"] = data
+        with open(file_name, "w", encoding="utf-8") as f:
+            json.dump(all_tables_json, f, ensure_ascii=False, indent=4)
+
+        QMessageBox.information(self, "Сохранение", f"Таблицы сохранены в:\n{file_name}")
 
 
 def tables_work(table_group_box):
@@ -88,3 +108,4 @@ def tables_work(table_group_box):
         table_group_box.hide()
     else:
         table_group_box.show()
+
