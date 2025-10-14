@@ -6,7 +6,6 @@ from graph import Graphics
 class MainWindow(QtWidgets.QWidget):
     def __init__(self):
         super().__init__()
-        self.tables_visible = True
         self.create_widgets()
         self.setup_layout()
 
@@ -15,7 +14,7 @@ class MainWindow(QtWidgets.QWidget):
         self.burger_btn = QtWidgets.QPushButton("☰")  # noqa
         self.burger_btn.setFixedSize(40, 40)
         self.burger_btn.clicked.connect(self.show_menu)
-        self.graphics_tabels = Graphics()
+        self.graphics_tabels = Graphics() # noqa
         self.table_menu = MainTables("Стержни")  # noqa первая таблица
         self.table_menu1 = MainTables("Распределенные нагрузки") # noqa вторая таблица
         self.table_menu2 = MainTables("Сосредтотченные нагрузки") # noqa третья таблица
@@ -65,27 +64,27 @@ class MainWindow(QtWidgets.QWidget):
     #высвечивание меню
     def show_menu(self):
         menu = QtWidgets.QMenu(self)
-        show_action = menu.addAction("Показать таблицу")
-        hide_action = menu.addAction("Скрыть таблицы")
+
+        submenu = QtWidgets.QMenu("Таблицы",self)
+        action1 = submenu.addAction("Стержни")
+        action2 = submenu.addAction("Распределенные нагрузки")
+        action3 = submenu.addAction("Сосредтотченные нагрузки")
+        menu.addMenu(submenu)
+
         save_action = menu.addAction("Сохранить файл")
-
         action = menu.exec_(self.burger_btn.mapToGlobal(self.burger_btn.rect().bottomLeft()))
-
-        if action == show_action:
-            self.show_tables()
-        elif action == hide_action:
-            self.hide_tables()
+        if action == action1:
+            tables_work(self.group_box1)
+        elif action == action2:
+            tables_work(self.group_box2)
+        elif action == action3:
+            tables_work(self.group_box3)
         elif action == save_action:
             self.save_file()
 
-    #показать таблицы
-    def show_tables(self):
-        self.group_box1.show()
-        self.group_box2.show()
-        self.group_box3.show()
 
-    #скрыть таблицы
-    def hide_tables(self):
-        self.group_box1.hide()
-        self.group_box2.hide()
-        self.group_box3.hide()
+def tables_work(table_group_box):
+    if table_group_box.isVisible():
+        table_group_box.hide()
+    else:
+        table_group_box.show()
