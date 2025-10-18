@@ -53,19 +53,19 @@ class MainTables(QTableWidget):
         self.minus_btn = QtWidgets.QPushButton("-") # noqa
 
         if self.table_name == "Сосредтотченные нагрузки":
-            self.setRowCount(3)
+            self.setRowCount(1)
             self.setColumnCount(2)
             self.horizontalHeader().setSectionResizeMode(QtWidgets.QHeaderView.Stretch)
             self.setItemDelegateForColumn(0,TablesDelegate(self, is_int = True, is_positive = True))
             self.setItemDelegateForColumn(1, TablesDelegate(self, is_int = False, is_positive = False))
         elif self.table_name == "Распределенные нагрузки":
-            self.setRowCount(3)
+            self.setRowCount(1)
             self.setColumnCount(2)
             self.horizontalHeader().setSectionResizeMode(QtWidgets.QHeaderView.Stretch)
             self.setItemDelegateForColumn(0, TablesDelegate(self, is_int = True, is_positive = True))
             self.setItemDelegateForColumn(1, TablesDelegate(self, is_int = False, is_positive = False))
         else:
-            self.setRowCount(3)
+            self.setRowCount(1)
             self.setColumnCount(4)
             self.horizontalHeader().setSectionResizeMode(QtWidgets.QHeaderView.Stretch)
             self.setItemDelegate(TablesDelegate(self, is_int = False, is_positive = True))
@@ -80,6 +80,7 @@ class MainTables(QTableWidget):
         else:
             self.setHorizontalHeaderLabels(["Длина(L)","Поперечное сечение(A)","Модуль упрогсти(E)", "Напряжение(σ)"])
 
+    #подстраиваем формат для json
     def tables_json(self):
         tables_data = {
             "Стержни": ["lenght", "cross_section", "modulus_of_elasticity", "pressure"],
@@ -96,13 +97,40 @@ class MainTables(QTableWidget):
         }
 
         for row in range(self.rowCount()):
-            row_values = {"barNumber": row + 1}
-            for col, field_name in enumerate(tables_data_name):
-                item = self.item(row, col)
-                row_values[field_name] = item.text() if item else ""
-            tables_json_data["List values"].append(row_values)
-
+            if self.table_name == "Стержни":
+                row_values = {"barNumber": row + 1}
+                for col, field_name in enumerate(tables_data_name):
+                    item = self.item(row, col)
+                    row_values[field_name] = item.text() if item else "0"
+                tables_json_data["List values"].append(row_values)
+            else:
+                row_values = {}
+                for col, field_name in enumerate(tables_data_name):
+                    item = self.item(row, col)
+                    row_values[field_name] = item.text() if item else "0"
+                tables_json_data["List values"].append(row_values)
         return tables_json_data
+
+    def load_from_json(self, table_data):
+        tables_data = {
+            "Стержни": ["lenght", "cross_section", "modulus_of_elasticity", "pressure"],
+            "Сосредтотченные нагрузки": ["node_number", "force"],
+            "Распределенные нагрузки": ["bar_number", "distributed_load"]
+        }
+
+        fields = tables_data.get(self.table_name, [])
+        list_values = table_data.get("List values", [])
+
+        self.setRowCount(len(list_values))
+
+        for row, row_data in enumerate(list_values):
+            for col, field_name in enumerate(fields):
+                #if valid_values() == True:
+                    value = str(row_data.get(field_name, ""))
+                    item = QtWidgets.QTableWidgetItem(value)
+                    self.setItem(row, col, item)
+        return True
+
 
     def add_row(self):
         current_rows = self.rowCount()
