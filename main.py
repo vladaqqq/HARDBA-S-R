@@ -7,7 +7,7 @@ from main_window import MainWindow
 if __name__ =="__main__":
     app = QtWidgets.QApplication(sys.argv)
     window = MainWindow()
-    window.setWindowTitle("SAPR-BAR")
+    window.setWindowTitle("BAR_2_LESBYXU")
     window.resize(1280,720)
     window.show()
     sys.exit(app.exec_())

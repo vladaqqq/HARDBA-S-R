@@ -1,8 +1,11 @@
 from PyQt5 import QtWidgets
+from PyQt5.QtGui import QKeySequence
+
+from graph_1 import GraphicsViewer
 from tables import MainTables
 from validator import validate_tables_data, validate_tables_data_on_open
 from PyQt5.QtWidgets import QWidget, QFileDialog, QMessageBox
-from graph import Graphics
+from PyQt5.QtCore import Qt
 import json
 
 class MainWindow(QtWidgets.QWidget):
@@ -16,7 +19,7 @@ class MainWindow(QtWidgets.QWidget):
         self.burger_btn = QtWidgets.QPushButton("☰")  # noqa
         self.burger_btn.setFixedSize(40, 40)
         self.burger_btn.clicked.connect(self.show_menu)
-        self.graphics_tabels = Graphics() # noqa
+        self.viewer = GraphicsViewer()
         self.table_menu = MainTables("Стержни")# noqa первая таблица
         self.table_menu1 = MainTables("Распределенные нагрузки") # noqa вторая таблица
         self.table_menu2 = MainTables("Сосредтотченные нагрузки") # noqa третья таблица
@@ -26,7 +29,7 @@ class MainWindow(QtWidgets.QWidget):
         main_layout = QtWidgets.QHBoxLayout()   #основной лэйаут
         main_layout1 = QtWidgets.QVBoxLayout()  #лэйаут для бургира
         main_layout1.addWidget(self.burger_btn)
-        main_layout1.addStretch()
+
 
         self.group_box1 = QtWidgets.QGroupBox("Стержни") # noqa
         table_layout1 = QtWidgets.QVBoxLayout()   #лэйаут для певрой таблицы
@@ -58,7 +61,7 @@ class MainWindow(QtWidgets.QWidget):
         tables_container.addStretch(1)
         tables_widget.setLayout(tables_container)
 
-        main_layout1.addWidget(self.graphics_tabels)
+        main_layout1.addWidget(self.viewer)
         main_layout.addLayout(main_layout1)   #добавление в основой лэйаут
         main_layout.addWidget(tables_widget)
         self.setLayout(main_layout)
@@ -68,7 +71,9 @@ class MainWindow(QtWidgets.QWidget):
         menu = QtWidgets.QMenu(self)
 
         submenu = QtWidgets.QMenu("Таблицы",self)
-        action1 = submenu.addAction("Стержни")
+        action1 = submenu.addAction("Стержни", submenu)
+        action1.setShortcut(QKeySequence(Qt.ALT + Qt.Key_O))
+        action1.triggered.connect(tables_work(self.group_box1))
         action2 = submenu.addAction("Распределенные нагрузки")
         action3 = submenu.addAction("Сосредтотченные нагрузки")
         menu.addMenu(submenu)

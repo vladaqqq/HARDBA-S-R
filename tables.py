@@ -133,13 +133,14 @@ class MainTables(QTableWidget):
 
 
     def add_row(self):
-        current_rows = self.rowCount()
-        self.setRowCount(current_rows + 1)
+        current_rows = self.currentRow()
+        self.insertRow(current_rows + 1)
+        self.clearSelection()
 
     def remove_row(self):
-        current_rows = self.rowCount()
-        if current_rows !=1:
-            self.setRowCount(current_rows - 1)
+        current_rows = self.currentRow()
+        self. removeRow(current_rows)
+        self.clearSelection()
 
     def keyPressEvent(self, event):
         if event.modifiers() & Qt.ControlModifier:
