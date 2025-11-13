@@ -1,32 +1,63 @@
 def validate_tables_data(table1_data, table2_data, table3_data):
     errors = []
 
-    #проверка количества стержней
-    bars_count = len(table1_data["List values"])
-    if bars_count == 0:
+    # Таблица "Стержни" — обязательна и без пустых/нулевых полей
+    bars = table1_data.get("List values", [])
+    if not bars:
         errors.append("Таблица 'Стержни' не должна быть пустой")
-        return errors  # Прерываем если нет стержней
+    else:
+        invalid_bars = any(
+            (value is None) or (str(value).strip() == "") or (str(value).strip() == "0")
+            for row in bars
+            for key, value in row.items()
+            if key != "barNumber"
+        )
+        if invalid_bars:
+            errors.append("Таблица 'Стержни' не может содержать пустые или нулевые значения")
 
-    #проверка номеров стержней в распределенных нагрузках
-    for i, row_data in enumerate(table2_data["List values"]):
-        bar_num_str = row_data.get("bar_number", "0")
-        bar_num = int(bar_num_str)
-        if bar_num > bars_count:
+    bars_count = len(bars)
+    if bars_count == 0:
+        return errors
+
+    # Таблица "Распределённые нагрузки" — может быть пустой,
+    # номер стержня может быть пустым/0 (тогда пропускаем), иначе валидируем
+    dist_loads = table2_data.get("List values", [])
+    for i, row in enumerate(dist_loads):
+        bar_num_raw = row.get("bar_number", "")
+        bar_num_str = str(bar_num_raw).strip()
+        if bar_num_str == "" or bar_num_str == "0":
+            continue
+        try:
+            bar_num = int(bar_num_str)
+        except ValueError:
+            errors.append(f"Таблица 'Распределённые нагрузки', строка {i + 1}: номер стержня должен быть числом")
+            continue
+        if bar_num <= 0 or bar_num > bars_count:
             errors.append(
-                f"Строка {i + 1} распределенных нагрузок: номер стержня {bar_num} "
-                f"превышает количество стержней ({bars_count})")
+                f"Таблица 'Распределённые нагрузки', строка {i + 1}: номер стержня {bar_num} некорректен (допустимый диапазон: 1–{bars_count})"
+            )
 
-    #проверка номеров узлов в сосредоточенных нагрузках
+    # Таблица "Сосредоточенные нагрузки" — может быть пустой,
+    # номер узла может быть пустым/0 (тогда пропускаем), иначе валидируем
+    conc_loads = table3_data.get("List values", [])
     max_nodes = bars_count + 1
-    for i, row_data in enumerate(table3_data["List values"]):
-        node_num_str = row_data.get("node_number", "0")
-        node_num = int(node_num_str)
-        if node_num > max_nodes:
+    for i, row in enumerate(conc_loads):
+        node_num_raw = row.get("node_number", "")
+        node_num_str = str(node_num_raw).strip()
+        if node_num_str == "" or node_num_str == "0":
+            continue
+        try:
+            node_num = int(node_num_str)
+        except ValueError:
+            errors.append(f"Таблица 'Сосредоточенные нагрузки', строка {i + 1}: номер узла должен быть числом")
+            continue
+        if node_num <= 0 or node_num > max_nodes:
             errors.append(
-                f"Строка {i + 1} сосредоточенных нагрузок: номер узла {node_num} "
-                f"превышает максимально возможный ({max_nodes})")
+                f"Таблица 'Сосредоточенные нагрузки', строка {i + 1}: номер узла {node_num} некорректен (допустимый диапазон: 1–{max_nodes})"
+            )
 
     return errors
+
 
 
 def validate_tables_data_on_open(table1_data, table2_data, table3_data):

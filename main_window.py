@@ -1,11 +1,8 @@
 from PyQt5 import QtWidgets
-from PyQt5.QtGui import QKeySequence
-
 from graph_1 import GraphicsViewer
 from tables import MainTables
 from validator import validate_tables_data, validate_tables_data_on_open
-from PyQt5.QtWidgets import QWidget, QFileDialog, QMessageBox
-from PyQt5.QtCore import Qt
+from PyQt5.QtWidgets import QWidget, QFileDialog, QMessageBox, QAction
 import json
 
 class MainWindow(QtWidgets.QWidget):
@@ -19,10 +16,10 @@ class MainWindow(QtWidgets.QWidget):
         self.burger_btn = QtWidgets.QPushButton("☰")  # noqa
         self.burger_btn.setFixedSize(40, 40)
         self.burger_btn.clicked.connect(self.show_menu)
-        self.viewer = GraphicsViewer()
-        self.table_menu = MainTables("Стержни")# noqa первая таблица
-        self.table_menu1 = MainTables("Распределенные нагрузки") # noqa вторая таблица
-        self.table_menu2 = MainTables("Сосредтотченные нагрузки") # noqa третья таблица
+        self.table_menu = MainTables("Стержни", parent=self)# noqa первая таблица
+        self.table_menu1 = MainTables("Распределенные нагрузки", parent=self) # noqa вторая таблица
+        self.table_menu2 = MainTables("Сосредтотченные нагрузки", parent=self) # noqa третья таблица
+        self.viewer = GraphicsViewer(self) # noqa
 
     #создание лэйаутов
     def setup_layout(self):
@@ -69,15 +66,14 @@ class MainWindow(QtWidgets.QWidget):
     #высвечивание меню
     def show_menu(self):
         menu = QtWidgets.QMenu(self)
-
         submenu = QtWidgets.QMenu("Таблицы",self)
-        action1 = submenu.addAction("Стержни", submenu)
-        action1.setShortcut(QKeySequence(Qt.ALT + Qt.Key_O))
-        action1.triggered.connect(tables_work(self.group_box1))
-        action2 = submenu.addAction("Распределенные нагрузки")
-        action3 = submenu.addAction("Сосредтотченные нагрузки")
+        action1 = QAction("Стержни", submenu)
+        submenu.addAction(action1)
+        action2 = QAction("Распределенные нагрузки")
+        submenu.addAction(action2)
+        action3 = QAction("Сосредтотченные нагрузки")
+        submenu.addAction(action3)
         menu.addMenu(submenu)
-
         open_action = menu.addAction("Открыть файл")
         save_action = menu.addAction("Сохранить файл")
         action = menu.exec_(self.burger_btn.mapToGlobal(self.burger_btn.rect().bottomLeft()))
@@ -169,6 +165,13 @@ class MainWindow(QtWidgets.QWidget):
 
         except Exception as e:
             QMessageBox.critical(self, "Ошибка", f"Не удалось загрузить файл:\n{e}")
+
+    def collect_info(self):
+        res = dict()
+        res["Стержни"] = self.table_menu.collect_info_bar()
+        res["Распределенные нагрузки"] = self.table_menu1.collect_info_loads()
+        res["Сосредоточенные нагрузки"] = self.table_menu2.collect_info_loads()
+        return res
 
 #работа с показом и скрытием таблиц
 def tables_work(table_group_box):

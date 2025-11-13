@@ -7,7 +7,7 @@ from main_window import MainWindow
 if __name__ =="__main__":
     app = QtWidgets.QApplication(sys.argv)
     window = MainWindow()
-    window.setWindowTitle("BAR_2_LESBYXU")
+    window.setWindowTitle("HARDBA(S)R")
     window.resize(1280,720)
     window.show()
     sys.exit(app.exec_())

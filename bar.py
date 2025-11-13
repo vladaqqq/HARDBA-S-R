@@ -3,21 +3,20 @@ from PyQt5.QtCore import QRectF
 
 
 class Bar(QGraphicsRectItem):
-    def __init__(self, x, y, length, width):
-        super().__init__(x, y, length, width)
+    def __init__(self, x, y, real_width, real_height, scaled_width, scaled_height):
+        super().__init__()
         self.x = x
         self.y = y
-        self.length = length
-        self.width = width
-        self.resize_bar(x, y, length, width)
+        self.real_width = real_width
+        self.real_height = real_height
+        self.scaled_width = scaled_width
+        self.scaled_height = scaled_height
+        self.setPos(self.x, self.y)
+        self.setZValue(3)
 
-    def resize_bar(self, x, y, length, width):
-        if length:
-            self.length = length
-        if width:
-            self.width = width
-        if x:
-            self.x = x
-        if y:
-            self.y = y
-        self.setRect(QRectF(self.x, self.y, self.length, self.width))
+    def boundingRect(self):
+        return QRectF(0, 0, self.scaled_width, self.scaled_height)
+
+    def paint(self, painter, option, widget=None):
+        painter.drawRect(QRectF(0, 0, self.scaled_width, self.scaled_height))
+
