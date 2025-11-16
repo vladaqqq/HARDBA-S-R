@@ -18,11 +18,9 @@ class ProcessorWindow(QWidget):
         self.setup_layout()
 
     def create_widgets(self):
-        # Заголовок
         self.title = QLabel("РАСЧЕТ СИСТЕМЫ МЕТОДОМ ПЕРЕМЕЩЕНИЙ")
         self.title.setAlignment(Qt.AlignCenter)
 
-        # Кнопка расчета
         self.calc_btn = QPushButton("ВЫПОЛНИТЬ РАСЧЕТ")
         self.calc_btn.clicked.connect(self.calculate_system)
         self.calc_btn.setStyleSheet("""
@@ -38,34 +36,28 @@ class ProcessorWindow(QWidget):
             }
         """)
 
-        # Таблица результатов
         self.results_table = QTableWidget()
         self.results_table.setEditTriggers(QTableWidget.NoEditTriggers)
         self.results_table.horizontalHeader().setStretchLastSection(True)
 
-        # Отчет
         self.report_text = QTextEdit()
         self.report_text.setReadOnly(True)
 
-        # --- Блок доступа к значению в точке ---
         self.query_group = QGroupBox("Получить значения в заданной точке")
         q_layout = QHBoxLayout()
 
-        # Номер стержня
         self.bar_input = QLineEdit()
         self.bar_input.setPlaceholderText("№ стержня")
         self.bar_input.setFixedWidth(60)
         q_layout.addWidget(QLabel("Стержень:"))
         q_layout.addWidget(self.bar_input)
 
-        # Координата x
         self.x_input = QLineEdit()
         self.x_input.setPlaceholderText("x (м)")
         self.x_input.setFixedWidth(100)
         q_layout.addWidget(QLabel("x:"))
         q_layout.addWidget(self.x_input)
 
-        # Кнопка показать значения
         self.query_btn = QPushButton("Показать значения")
         self.query_btn.clicked.connect(self.query_point)
         self.query_btn.setStyleSheet("""
@@ -82,7 +74,6 @@ class ProcessorWindow(QWidget):
         """)
         q_layout.addWidget(self.query_btn)
 
-        # Результат
         self.query_result = QLabel("")
         self.query_result.setWordWrap(True)
         self.query_result.setStyleSheet("""
@@ -94,7 +85,6 @@ class ProcessorWindow(QWidget):
             }
         """)
 
-        # Вертикальная компоновка блока запроса
         v_layout = QVBoxLayout()
         v_layout.addLayout(q_layout)
         v_layout.addWidget(self.query_result)
@@ -104,17 +94,14 @@ class ProcessorWindow(QWidget):
         main_layout = QVBoxLayout()
         main_layout.setContentsMargins(10, 10, 10, 10)
 
-        # Верхняя панель с заголовком и кнопкой
         header = QHBoxLayout()
         header.addWidget(self.title)
         header.addStretch()
         header.addWidget(self.calc_btn)
 
-        # Рабочая область
         work_layout = QHBoxLayout()
         work_layout.setContentsMargins(0, 10, 0, 0)
 
-        # Таблица и блок запроса
         self.results_table.setMinimumWidth(900)
         self.results_table.setMinimumHeight(600)
         self.results_table.setSizeAdjustPolicy(QTableWidget.AdjustToContents)
@@ -126,7 +113,6 @@ class ProcessorWindow(QWidget):
         table_layout.addWidget(self.query_group)
         table_layout.setStretchFactor(self.results_table, 1)
 
-        # Кнопка переключения панели
         self.toggle_btn = QPushButton("◀ Параметры")
         self.toggle_btn.setCheckable(True)
         self.toggle_btn.clicked.connect(self.toggle_side_panel)
@@ -147,7 +133,6 @@ class ProcessorWindow(QWidget):
             }
         """)
 
-        # Боковая панель с параметрами
         self.side_panel = QFrame()
         self.side_panel.setMinimumWidth(300)
         self.side_panel.setMaximumWidth(350)
@@ -171,7 +156,6 @@ class ProcessorWindow(QWidget):
         main_layout.addLayout(work_layout)
         self.setLayout(main_layout)
 
-        # Стили заголовка
         self.title.setStyleSheet("""
             font-size: 18px;
             font-weight: bold;
@@ -186,7 +170,6 @@ class ProcessorWindow(QWidget):
             self.side_panel.show()
             self.toggle_btn.setText("◀ Параметры")
 
-    # ======== Расчёт и отображение результатов ========
     def calculate_system(self):
         try:
             system_data = self.main_window.collect_info()
@@ -210,7 +193,8 @@ class ProcessorWindow(QWidget):
                 except Exception:
                     pass
             else:
-                self.report_text.setText("Ошибка при выполнении расчёта")
+                QMessageBox.warning(self, "Ошибка", "Сначала выполните расчёт!")
+                return
 
         except Exception as e:
             self.report_text.setText(f"Ошибка: {str(e)}")
@@ -274,16 +258,13 @@ class ProcessorWindow(QWidget):
         self.results_table.resizeColumnsToContents()
         self.results_table.resizeRowsToContents()
 
-    # ======== Доступ к значению в точке ========
     def query_point(self):
         if not self.results:
             QMessageBox.warning(self, "Ошибка", "Сначала выполните расчёт!")
             return
-
         system_data = self.main_window.collect_info()
         bars = system_data.get("Стержни", [])
         distributed_loads = system_data.get("Распределенные нагрузки", [])
-
         # Номер стержня
         s_bar = self.bar_input.text().strip()
         if not s_bar:
@@ -298,7 +279,6 @@ class ProcessorWindow(QWidget):
             QMessageBox.warning(self, "Ошибка", "Такого стержня не существует!")
             return
         i = bar_id - 1
-
         # Координата x
         s_x = self.x_input.text().strip()
         if not s_x:
@@ -309,19 +289,16 @@ class ProcessorWindow(QWidget):
         except ValueError:
             QMessageBox.warning(self, "Ошибка", "Координата x должна быть числом!")
             return
-
         L = float(bars[i][0])
         if x < 0 or x > L:
             QMessageBox.warning(self, "Ошибка", f"Координата x должна быть в пределах [0; {L}]")
             return
-
         try:
             force_func = self.results['bar_forces'][i]
             stress_func = self.results['bar_stresses'][i]
         except Exception:
             QMessageBox.warning(self, "Ошибка", "Данные функций для стержня отсутствуют.")
             return
-
         try:
             N_x = force_func(x)
         except Exception:
@@ -330,7 +307,6 @@ class ProcessorWindow(QWidget):
             sigma_x = stress_func(x)
         except Exception:
             sigma_x = float('nan')
-
         try:
             L_bar = float(bars[i][0])
             A = float(bars[i][1])
@@ -342,7 +318,6 @@ class ProcessorWindow(QWidget):
 
         U0 = float(self.results['displacements'][i])
         UL = float(self.results['displacements'][i + 1]) if i + 1 < len(self.results['displacements']) else U0
-
         q = 0.0
         for ld in distributed_loads:
             try:
@@ -351,7 +326,6 @@ class ProcessorWindow(QWidget):
                     break
             except Exception:
                 continue
-
         try:
             if A is None or E is None or A == 0 or E == 0:
                 u_x = U0 + (UL - U0) * (x / L_bar)
@@ -359,7 +333,6 @@ class ProcessorWindow(QWidget):
                 u_x = U0 + (UL - U0) * (x / L_bar) + (q / (2.0 * E * A)) * (x * L_bar - x ** 2)
         except Exception:
             u_x = float('nan')
-
         out = (
             f"<b>Стержень {bar_id}</b><br>"
             f"x = {x:.6f} м<br><br>"
@@ -368,3 +341,60 @@ class ProcessorWindow(QWidget):
             f"u(x) = {u_x:.6e} м"
         )
         self.query_result.setText(out)
+
+    def save_results_to_json(self, results):
+        options = QFileDialog.Options()
+        file_name, _ = QFileDialog.getSaveFileName(
+            self,
+            "Сохранить результаты расчёта",
+            "",
+            "JSON Files (*.json)",
+            options=options
+        )
+        if not file_name:
+            return
+
+        system_data = self.main_window.collect_info()
+        bars_data = system_data["Стержни"]
+
+        json_data = {
+            "CalculationResult": {
+                "Bars": [],
+                "Nodes": []
+            }
+        }
+        # Сохраняем все точки для каждого стержня
+        for i, bar_points in enumerate(results["bar_forces_points"]):
+            xs, Ns = zip(*bar_points)
+            _, sigmas = zip(*results["bar_stresses_points"][i])
+            _, us = zip(*results["bar_displacements_points"][i])
+
+            bar_entry = {
+                "bar_id": i + 1,
+                "length": bars_data[i][0],
+                "cross_section": bars_data[i][1],
+                "modulus_of_elasticity": bars_data[i][2],
+                "points": []
+            }
+
+            for x, N_val, sigma_val, u_val in zip(xs, Ns, sigmas, us):
+                bar_entry["points"].append({
+                    "x": x,
+                    "N": N_val,
+                    "sigma": sigma_val,
+                    "u": u_val
+                })
+
+            json_data["CalculationResult"]["Bars"].append(bar_entry)
+        for i, u in enumerate(results["displacements"]):
+            json_data["CalculationResult"]["Nodes"].append({
+                "node_id": i + 1,
+                "u": u
+            })
+
+        with open(file_name, "w", encoding="utf-8") as f:
+            json.dump(json_data, f, ensure_ascii=False, indent=4)
+
+        QMessageBox.information(self, "Сохранено", "Результаты успешно сохранены!")
+
+

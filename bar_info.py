@@ -1,4 +1,4 @@
-from PyQt5.QtCore import QRectF, QLineF
+from PyQt5.QtCore import QRectF, QLineF, Qt
 from PyQt5.QtGui import QColor, QPen, QFont
 from PyQt5.QtWidgets import QGraphicsItem
 
@@ -49,7 +49,19 @@ class BarInfo(QGraphicsItem):
                                 self.difference_height + 114))
         painter.drawLine(QLineF(self.scaled_width + 10, self.difference_height + 119, self.scaled_width + 5,
                                 self.difference_height + 124))
-        painter.drawText(QRectF((self.scaled_width + 10) // 2, self.difference_height + 100, 20, 20), str(int(self.real_width)))
+        full_text = str(int(self.real_width))
+        if len(full_text) > 5:
+            display_text = full_text[:5] + "…"
+        else:
+            display_text = full_text
+        text_rect = QRectF(
+            (self.scaled_width + 10) / 2 - 15,
+            self.difference_height + 100,
+            70,
+            20
+        )
+        painter.drawText(text_rect, Qt.AlignCenter, display_text)
+
 
 class BarNum(QGraphicsItem):
     def __init__(self, bar_id, x, y):

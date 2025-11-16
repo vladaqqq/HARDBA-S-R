@@ -114,6 +114,7 @@ class MainWindow(QtWidgets.QWidget):
         open_action = menu.addAction("Открыть файл")
         save_action = menu.addAction("Сохранить файл")
         save_calc_action = menu.addAction("Сохранить файл расчёта")
+        open_calc_action = menu.addAction("Открыть файл рассчета")
         action = menu.exec_(self.burger_btn.mapToGlobal(self.burger_btn.rect().bottomLeft()))
 
         if action == action1:
@@ -128,22 +129,21 @@ class MainWindow(QtWidgets.QWidget):
             self.open_file()
         elif action == save_calc_action:
             self.save_calculation()
+        elif action == open_calc_action:
+            self.open_calc_file()
 
-    #сохранение файлов
     def save_all_tables(self):
         options = QFileDialog.Options()
         file_name, _ = QFileDialog.getSaveFileName(
             self, "Сохранить все таблицы", "", "JSON Files (*.json)", options=options) #окно для сохранения
         if not file_name:
             return
-
         errors = validate_tables_data(self.table_menu.tables_json(), self.table_menu1.tables_json(),
                                       self.table_menu2.tables_json())
         if errors:
             error_text = "\n".join(errors)
             QMessageBox.warning(self, "Ошибки валидации", f"Обнаружены ошибки:\n\n{error_text}")
             return
-
         all_tables_json = dict()
         data = list()
         data.append(self.table_menu.tables_json())
@@ -162,20 +162,15 @@ class MainWindow(QtWidgets.QWidget):
         )
         if not file_name:
             return
-
         try:
             with open(file_name, "r", encoding="utf-8") as f:
                 data = json.load(f)
-
             if "Objects" not in data:
                 QMessageBox.warning(self, "Ошибка", "Неверный формат файла")
                 return
-
             table1_data = None
             table2_data = None
             table3_data = None
-
-            # Собираем данные таблиц
             for table_data in data["Objects"]:
                 if table_data["Object"] == "Стержни":
                     table1_data = table_data
@@ -183,15 +178,11 @@ class MainWindow(QtWidgets.QWidget):
                     table2_data = table_data
                 elif table_data["Object"] == "Сосредтотченные нагрузки":
                     table3_data = table_data
-
-            # Валидация
             errors = validate_tables_data_on_open(table1_data, table2_data, table3_data)
             if errors:
                 error_text = "\n".join(errors)
                 QMessageBox.warning(self, "Ошибки валидации", f"Обнаружены ошибки:\n\n{error_text}")
                 return
-
-            # Загружаем данные
             for table_data in data["Objects"]:
                 table_name = table_data["Object"]
                 if table_name == "Стержни":
@@ -200,13 +191,10 @@ class MainWindow(QtWidgets.QWidget):
                     self.table_menu1.load_from_json(table_data)
                 elif table_name == "Сосредтотченные нагрузки":
                     self.table_menu2.load_from_json(table_data)
-
             info = self.collect_info()
             self.scene = self.viewer.scene
             self.scene.loading_from_file = True
             self.scene.update_scene(info)
-
-
             QMessageBox.information(self, "Успех", "Все таблицы загружены")
 
         except Exception as e:
@@ -223,6 +211,26 @@ class MainWindow(QtWidgets.QWidget):
         except Exception as e:
             QMessageBox.critical(self, "Ошибка", f"Ошибка при сохранении расчёта:\n{str(e)}")
 
+    def open_calc_file(self):
+        options = QFileDialog.Options()
+        file_name, _ = QFileDialog.getOpenFileName(
+            self, "Открыть файл расчёта", "", "JSON Files (*.json)", options=options
+        )
+        if not file_name:
+            return
+        try:
+            import json
+            with open(file_name, "r", encoding="utf-8") as f:
+                data = json.load(f)
+            if "CalculationResult" not in data:
+                QMessageBox.warning(self, "Ошибка", "Неверный формат файла расчёта")
+                return
+            calc_data = data["CalculationResult"]
+            self.postprocess_tab.load_calculation(calc_data)
+            QMessageBox.information(self, "Успех", "Файл расчёта успешно загружен")
+        except Exception as e:
+            QMessageBox.critical(self, "Ошибка", f"Не удалось открыть файл:\n{str(e)}")
+
     def collect_info(self):
         res = dict()
         res["Стержни"] = self.table_menu.collect_info_bar()
@@ -235,6 +243,7 @@ class MainWindow(QtWidgets.QWidget):
             self.postprocess_tab.update_results()
         except AttributeError:
             QMessageBox.warning(self, "Ошибка", "Метод обновления постпроцессора недоступен")
+
 
 #работа с показом и скрытием таблиц
 def tables_work(table_group_box):

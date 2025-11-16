@@ -96,14 +96,16 @@ class GraphicsScene(QGraphicsScene):
                     msg.exec_()
                     break
             if 0 <= node_number <= len(self.bars):
-                if node_number == len(self.bars):
-                    x = self.bars[-1].x + self.bars[-1].scaled_width
-                else:
-                    x = self.bars[node_number].x
-                y = 0
-                draw_load = Сoncentrated_loads(x, y, force)
-                self.addItem(draw_load)
-                busy_nodes.append(node_number)
+                if force != 0:
+                    if node_number == len(self.bars):
+                        x = self.bars[-1].x + self.bars[-1].scaled_width
+                    else:
+                        x = self.bars[node_number].x
+                    y = 0
+                    draw_load = Сoncentrated_loads(x, y, force)
+                    self.addItem(draw_load)
+                    busy_nodes.append(node_number)
+                else: continue
             else:
                 if not self.loading_from_file:
                     msg = QMessageBox()
@@ -131,12 +133,14 @@ class GraphicsScene(QGraphicsScene):
                     msg.exec_()
                     break
             if 0 <= bar_number < len(self.bars):
-                x = self.bars[bar_number].x
-                width = self.bars[bar_number].scaled_width
-                y = 0
-                draw_load = Distributed_loads(x, y, width, force)
-                self.addItem(draw_load)
-                busy_bar.append(bar_number)
+                if force !=0:
+                    x = self.bars[bar_number].x
+                    width = self.bars[bar_number].scaled_width
+                    y = 0
+                    draw_load = Distributed_loads(x, y, width, force)
+                    self.addItem(draw_load)
+                    busy_bar.append(bar_number)
+                else: continue
             else:
                 if not self.loading_from_file:
                     msg = QMessageBox()
