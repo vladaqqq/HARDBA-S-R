@@ -274,4 +274,3 @@ class MainTables(QTableWidget):
                     break
             else:
                 self.parent.viewer.scene.update_scene(self.parent.collect_info())
-

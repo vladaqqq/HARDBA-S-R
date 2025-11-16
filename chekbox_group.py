@@ -13,7 +13,7 @@ class BarCheckBox(QGraphicsItem):
         self.setPos(self.x, self.y)
 
     def boundingRect(self):
-        return QRectF(0, -7, 30, self.scaled_height + 7)
+        return QRectF(0, -7, 40, self.scaled_height + 20)
 
     def paint(self, painter, option, widget=None):
         pen = QPen(QColor(0, 0, 0))
