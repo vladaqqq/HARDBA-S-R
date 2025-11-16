@@ -1,7 +1,14 @@
 def validate_tables_data(table1_data, table2_data, table3_data):
     errors = []
 
-    # Таблица "Стержни" — обязательна и без пустых/нулевых полей
+    # === Проверка заделок ===
+    left = table1_data.get("Левая заделка", False)
+    right = table1_data.get("Правая заделка", False)
+
+    if not left and not right:
+        errors.append("Должна быть установлена хотя бы одна заделка (левая или правая)")
+
+    # === Таблица 'Стержни' — обязательная ===
     bars = table1_data.get("List values", [])
     if not bars:
         errors.append("Таблица 'Стержни' не должна быть пустой")
@@ -19,8 +26,7 @@ def validate_tables_data(table1_data, table2_data, table3_data):
     if bars_count == 0:
         return errors
 
-    # Таблица "Распределённые нагрузки" — может быть пустой,
-    # номер стержня может быть пустым/0 (тогда пропускаем), иначе валидируем
+    # === Таблица 'Распределенные нагрузки' ===
     dist_loads = table2_data.get("List values", [])
     for i, row in enumerate(dist_loads):
         bar_num_raw = row.get("bar_number", "")
@@ -30,15 +36,17 @@ def validate_tables_data(table1_data, table2_data, table3_data):
         try:
             bar_num = int(bar_num_str)
         except ValueError:
-            errors.append(f"Таблица 'Распределённые нагрузки', строка {i + 1}: номер стержня должен быть числом")
+            errors.append(
+                f"Таблица 'Распределённые нагрузки', строка {i + 1}: номер стержня должен быть числом"
+            )
             continue
         if bar_num <= 0 or bar_num > bars_count:
             errors.append(
-                f"Таблица 'Распределённые нагрузки', строка {i + 1}: номер стержня {bar_num} некорректен (допустимый диапазон: 1–{bars_count})"
+                f"Таблица 'Распределённые нагрузки', строка {i + 1}: номер стержня {bar_num} некорректен "
+                f"(допустимый диапазон: 1–{bars_count})"
             )
 
-    # Таблица "Сосредоточенные нагрузки" — может быть пустой,
-    # номер узла может быть пустым/0 (тогда пропускаем), иначе валидируем
+    # === Таблица 'Сосредоточенные нагрузки' ===
     conc_loads = table3_data.get("List values", [])
     max_nodes = bars_count + 1
     for i, row in enumerate(conc_loads):
@@ -49,11 +57,14 @@ def validate_tables_data(table1_data, table2_data, table3_data):
         try:
             node_num = int(node_num_str)
         except ValueError:
-            errors.append(f"Таблица 'Сосредоточенные нагрузки', строка {i + 1}: номер узла должен быть числом")
+            errors.append(
+                f"Таблица 'Сосредоточенные нагрузки', строка {i + 1}: номер узла должен быть числом"
+            )
             continue
         if node_num <= 0 or node_num > max_nodes:
             errors.append(
-                f"Таблица 'Сосредоточенные нагрузки', строка {i + 1}: номер узла {node_num} некорректен (допустимый диапазон: 1–{max_nodes})"
+                f"Таблица 'Сосредоточенные нагрузки', строка {i + 1}: номер узла {node_num} некорректен "
+                f"(допустимый диапазон: 1–{max_nodes})"
             )
 
     return errors

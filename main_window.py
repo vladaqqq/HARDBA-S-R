@@ -2,8 +2,10 @@ from PyQt5 import QtWidgets
 from graph_1 import GraphicsViewer
 from tables import MainTables
 from validator import validate_tables_data, validate_tables_data_on_open
-from PyQt5.QtWidgets import QWidget, QFileDialog, QMessageBox, QAction
+from PyQt5.QtWidgets import QWidget, QFileDialog, QMessageBox, QAction, QPushButton, QTableWidget, QTabWidget
 import json
+from processor_window import ProcessorWindow
+from postproc_window import PostProcessorWindow
 
 class MainWindow(QtWidgets.QWidget):
     def __init__(self):
@@ -16,33 +18,61 @@ class MainWindow(QtWidgets.QWidget):
         self.burger_btn = QtWidgets.QPushButton("☰")  # noqa
         self.burger_btn.setFixedSize(40, 40)
         self.burger_btn.clicked.connect(self.show_menu)
+
         self.table_menu = MainTables("Стержни", parent=self)# noqa первая таблица
         self.table_menu1 = MainTables("Распределенные нагрузки", parent=self) # noqa вторая таблица
         self.table_menu2 = MainTables("Сосредтотченные нагрузки", parent=self) # noqa третья таблица
         self.viewer = GraphicsViewer(self) # noqa
 
-    #создание лэйаутов
+        self.mode_tabs = QTabWidget()
+        self.mode_tabs.setTabPosition(QTabWidget.North)
+        self.mode_tabs.setMovable(False)
+
+        # Создаем виджеты для вкладок
+        self.preprocess_tab = QWidget()
+        self.process_tab = ProcessorWindow(self)  # Используем готовый класс процессора
+        self.postprocess_tab = PostProcessorWindow(self)
+
+        self.mode_tabs.addTab(self.preprocess_tab, "Препроцессор")
+        self.mode_tabs.addTab(self.process_tab, "Процессор")
+        self.mode_tabs.addTab(self.postprocess_tab, "Постпроцессор")
+
+        # создание лэйаутов
     def setup_layout(self):
-        main_layout = QtWidgets.QHBoxLayout()   #основной лэйаут
-        main_layout1 = QtWidgets.QVBoxLayout()  #лэйаут для бургира
-        main_layout1.addWidget(self.burger_btn)
+        main_layout = QtWidgets.QVBoxLayout()  # основной лэйаут
+        main_layout.setContentsMargins(0, 0, 0, 0)
 
+        # Верхняя панель с бургер-меню и вкладками на одном уровне
+        top_bar = QtWidgets.QVBoxLayout()
+        top_bar.setContentsMargins(5, 5, 5, 5)
+        top_bar.addWidget(self.burger_btn)
+        top_bar.addWidget(self.mode_tabs, stretch=1)
 
-        self.group_box1 = QtWidgets.QGroupBox("Стержни") # noqa
-        table_layout1 = QtWidgets.QVBoxLayout()   #лэйаут для певрой таблицы
+        main_layout.addLayout(top_bar)
+
+        preprocess_main_layout = QtWidgets.QHBoxLayout()
+        preprocess_main_layout.setContentsMargins(0, 0, 0, 0)
+
+        # Левая часть - график
+        left_layout = QtWidgets.QVBoxLayout()
+        left_layout.addWidget(self.viewer)
+
+        # Правая часть - таблицы
+        self.group_box1 = QtWidgets.QGroupBox("Стержни")
+        table_layout1 = QtWidgets.QVBoxLayout()
         table_layout1.addWidget(self.table_menu)
         table_layout1.addWidget(self.table_menu.plus_btn)
         table_layout1.addWidget(self.table_menu.minus_btn)
         self.group_box1.setLayout(table_layout1)
 
-        self.group_box2 = QtWidgets.QGroupBox("Распределенные нагрузки") # noqa
-        table_layout2 = QtWidgets.QVBoxLayout()   #лэйаут для второй таблицы
+        self.group_box2 = QtWidgets.QGroupBox("Распределенные нагрузки")
+        table_layout2 = QtWidgets.QVBoxLayout()
         table_layout2.addWidget(self.table_menu1)
         table_layout2.addWidget(self.table_menu1.plus_btn)
         table_layout2.addWidget(self.table_menu1.minus_btn)
         self.group_box2.setLayout(table_layout2)
 
-        self.group_box3 = QtWidgets.QGroupBox("Сосредтотченные нагрузки") # noqa
+        self.group_box3 = QtWidgets.QGroupBox("Сосредтотченные нагрузки")
         table_layout3 = QtWidgets.QVBoxLayout()
         table_layout3.addWidget(self.table_menu2)
         table_layout3.addWidget(self.table_menu2.plus_btn)
@@ -51,16 +81,23 @@ class MainWindow(QtWidgets.QWidget):
 
         tables_widget = QWidget()
         tables_widget.setMaximumWidth(780)
-        tables_container = QtWidgets.QVBoxLayout()   #лэйаут для всех таблиц
+        tables_container = QtWidgets.QVBoxLayout()
         tables_container.addWidget(self.group_box1)
         tables_container.addWidget(self.group_box2)
         tables_container.addWidget(self.group_box3)
         tables_container.addStretch(1)
         tables_widget.setLayout(tables_container)
 
-        main_layout1.addWidget(self.viewer)
-        main_layout.addLayout(main_layout1)   #добавление в основой лэйаут
-        main_layout.addWidget(tables_widget)
+        # Собираем layout препроцессора
+        preprocess_main_layout.addLayout(left_layout)
+        preprocess_main_layout.addWidget(tables_widget)
+        self.preprocess_tab.setLayout(preprocess_main_layout)
+
+        # Для постпроцессора пока пустой layout
+        postprocess_layout = QtWidgets.QVBoxLayout()
+        postprocess_layout.addWidget(QtWidgets.QLabel("Постпроцессор - здесь будут результаты расчетов"))
+        self.postprocess_tab.setLayout(postprocess_layout)
+
         self.setLayout(main_layout)
 
     #высвечивание меню
@@ -76,6 +113,7 @@ class MainWindow(QtWidgets.QWidget):
         menu.addMenu(submenu)
         open_action = menu.addAction("Открыть файл")
         save_action = menu.addAction("Сохранить файл")
+        save_calc_action = menu.addAction("Сохранить файл расчёта")
         action = menu.exec_(self.burger_btn.mapToGlobal(self.burger_btn.rect().bottomLeft()))
 
         if action == action1:
@@ -88,6 +126,8 @@ class MainWindow(QtWidgets.QWidget):
             self.save_all_tables()
         elif action == open_action:
             self.open_file()
+        elif action == save_calc_action:
+            self.save_calculation()
 
     #сохранение файлов
     def save_all_tables(self):
@@ -144,14 +184,14 @@ class MainWindow(QtWidgets.QWidget):
                 elif table_data["Object"] == "Сосредтотченные нагрузки":
                     table3_data = table_data
 
-            # Валидация при открытии (уже включает проверку наличия всех таблиц)
+            # Валидация
             errors = validate_tables_data_on_open(table1_data, table2_data, table3_data)
             if errors:
                 error_text = "\n".join(errors)
                 QMessageBox.warning(self, "Ошибки валидации", f"Обнаружены ошибки:\n\n{error_text}")
                 return
 
-            # Загружаем данные (валидация уже прошла)
+            # Загружаем данные
             for table_data in data["Objects"]:
                 table_name = table_data["Object"]
                 if table_name == "Стержни":
@@ -161,10 +201,27 @@ class MainWindow(QtWidgets.QWidget):
                 elif table_name == "Сосредтотченные нагрузки":
                     self.table_menu2.load_from_json(table_data)
 
+            info = self.collect_info()
+            self.scene = self.viewer.scene
+            self.scene.loading_from_file = True
+            self.scene.update_scene(info)
+
+
             QMessageBox.information(self, "Успех", "Все таблицы загружены")
 
         except Exception as e:
-            QMessageBox.critical(self, "Ошибка", f"Не удалось загрузить файл:\n{e}")
+            QMessageBox.critical(self, "Ошибка", str(e))
+
+    def save_calculation(self):
+        try:
+            results = self.process_tab.results
+        except AttributeError:
+            QMessageBox.warning(self, "Нет данных", "Сначала выполните расчёт!")
+            return
+        try:
+            self.process_tab.save_results_to_json(results)
+        except Exception as e:
+            QMessageBox.critical(self, "Ошибка", f"Ошибка при сохранении расчёта:\n{str(e)}")
 
     def collect_info(self):
         res = dict()
@@ -172,6 +229,12 @@ class MainWindow(QtWidgets.QWidget):
         res["Распределенные нагрузки"] = self.table_menu1.collect_info_loads()
         res["Сосредоточенные нагрузки"] = self.table_menu2.collect_info_loads()
         return res
+
+    def update_postprocessor(self):
+        try:
+            self.postprocess_tab.update_results()
+        except AttributeError:
+            QMessageBox.warning(self, "Ошибка", "Метод обновления постпроцессора недоступен")
 
 #работа с показом и скрытием таблиц
 def tables_work(table_group_box):

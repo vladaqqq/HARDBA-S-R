@@ -29,7 +29,7 @@ class BarInfo(QGraphicsItem):
             pen.setColor(QColor(0, 255, 0))
             painter.setPen(pen)
             painter.drawRect(QRectF(0,  self.difference_height + 20, 20, 30))
-            painter.drawText(QRectF(6, self.difference_height + 25, 20, 20), '1')
+            painter.drawText(QRectF(6, self.difference_height + 25, 30, 20), '1')
             pen.setColor(QColor(0, 0, 0))
             painter.setPen(pen)
             painter.drawLine(QLineF(10, self.difference_height + 50, 10, self.difference_height + 119))
@@ -37,7 +37,7 @@ class BarInfo(QGraphicsItem):
         pen.setColor(QColor(0, 255, 0))
         painter.setPen(pen)
         painter.drawRect(QRectF(self.scaled_width, self.difference_height + 20, 20, 30))
-        painter.drawText(QRectF(self.scaled_width + 6, self.difference_height + 25, 20, 20), str(self.bar_id + 1))
+        painter.drawText(QRectF(self.scaled_width + 6, self.difference_height + 25, 30, 20), str(self.bar_id + 1))
         pen.setColor(QColor(0, 0, 0))
         painter.setPen(pen)
         painter.drawLine(QLineF(self.scaled_width + 10, self.difference_height + 50, self.scaled_width + 10,

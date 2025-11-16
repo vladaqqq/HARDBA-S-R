@@ -1,5 +1,4 @@
 from PyQt5.QtWidgets import QGraphicsScene, QMessageBox
-from pyparsing import empty
 from bar import Bar
 from loads import Сoncentrated_loads, Distributed_loads
 from bar_info import BarInfo, BarNum
@@ -16,6 +15,7 @@ class GraphicsScene(QGraphicsScene):
         self.parent = parent
         self.left_checkbox = BarCheckBox()
         self.right_checkbox = BarCheckBox(direction="Right")
+        self.loading_from_file = False
 
     def update_scene(self, info):
         if not info:
@@ -87,13 +87,14 @@ class GraphicsScene(QGraphicsScene):
             force = loads[1]
             node_number = loads[0] - 1
             if node_number in busy_nodes:
-                msg = QMessageBox()
-                msg.setIcon(QMessageBox.Warning)
-                msg.setWindowTitle("Предупреждение")
-                msg.setText(f"На узел {node_number + 1} уже наложена сила!")
-                msg.setStandardButtons(QMessageBox.Ok)
-                msg.exec_()
-                break
+                if not self.loading_from_file:
+                    msg = QMessageBox()
+                    msg.setIcon(QMessageBox.Warning)
+                    msg.setWindowTitle("Предупреждение")
+                    msg.setText(f"На узел {node_number + 1} уже наложена сила!")
+                    msg.setStandardButtons(QMessageBox.Ok)
+                    msg.exec_()
+                    break
             if 0 <= node_number <= len(self.bars):
                 if node_number == len(self.bars):
                     x = self.bars[-1].x + self.bars[-1].scaled_width
@@ -104,13 +105,14 @@ class GraphicsScene(QGraphicsScene):
                 self.addItem(draw_load)
                 busy_nodes.append(node_number)
             else:
-                msg = QMessageBox()
-                msg.setIcon(QMessageBox.Warning)
-                msg.setWindowTitle("Предупреждение")
-                msg.setText(f"Такого узла не существует!")
-                msg.setStandardButtons(QMessageBox.Ok)
-                msg.exec_()
-                break
+                if not self.loading_from_file:
+                    msg = QMessageBox()
+                    msg.setIcon(QMessageBox.Warning)
+                    msg.setWindowTitle("Предупреждение")
+                    msg.setText(f"Такого узла не существует!")
+                    msg.setStandardButtons(QMessageBox.Ok)
+                    msg.exec_()
+                    break
 
     def update_distributed_loads(self, loads_info):
         if not loads_info or not self.bars:
@@ -120,13 +122,14 @@ class GraphicsScene(QGraphicsScene):
             force = loads[1]
             bar_number = loads[0] - 1
             if bar_number in busy_bar:
-                msg = QMessageBox()
-                msg.setIcon(QMessageBox.Warning)
-                msg.setWindowTitle("Предупреждение")
-                msg.setText(f"На стержень {bar_number + 1} уже наложена сила!")
-                msg.setStandardButtons(QMessageBox.Ok)
-                msg.exec_()
-                break
+                if not self.loading_from_file:
+                    msg = QMessageBox()
+                    msg.setIcon(QMessageBox.Warning)
+                    msg.setWindowTitle("Предупреждение")
+                    msg.setText(f"На стержень {bar_number + 1} уже наложена сила!")
+                    msg.setStandardButtons(QMessageBox.Ok)
+                    msg.exec_()
+                    break
             if 0 <= bar_number < len(self.bars):
                 x = self.bars[bar_number].x
                 width = self.bars[bar_number].scaled_width
@@ -135,13 +138,14 @@ class GraphicsScene(QGraphicsScene):
                 self.addItem(draw_load)
                 busy_bar.append(bar_number)
             else:
-                msg = QMessageBox()
-                msg.setIcon(QMessageBox.Warning)
-                msg.setWindowTitle("Предупреждение")
-                msg.setText(f"Такого стержня не существует!")
-                msg.setStandardButtons(QMessageBox.Ok)
-                msg.exec_()
-                break
+                if not self.loading_from_file:
+                    msg = QMessageBox()
+                    msg.setIcon(QMessageBox.Warning)
+                    msg.setWindowTitle("Предупреждение")
+                    msg.setText(f"Такого стержня не существует!")
+                    msg.setStandardButtons(QMessageBox.Ok)
+                    msg.exec_()
+                    break
 
     def bar_scaling(self, bar_info):
         self.max_width = self.parent.viewport().width() - 200
